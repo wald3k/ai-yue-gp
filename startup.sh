@@ -64,10 +64,29 @@ pip install --no-cache-dir --upgrade pip wheel
 
 # Install required dependencies
 pip install --no-cache-dir --upgrade pip
-pip install torch==2.5.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cu124
+#pip install torch==2.5.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/test/cu124
+pip uninstall -y torch torchvision torchaudio || true
+pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 \
+  --extra-index-url https://download.pytorch.org/whl/cu124
+
+
+
 pip install --no-cache-dir --root-user-action=ignore -r "$YUEGP_HOME/requirements.txt"
 pip install --no-cache-dir wheel
-pip install --no-cache-dir --root-user-action=ignore flash-attn --no-build-isolation
+pip install --no-cache-dir ninja cmake packaging pybind11
+pip install --no-cache-dir flash-attn --no-build-isolation
+#pip install --no-cache-dir --root-user-action=ignore flash-attn --no-build-isolation
+python - <<'EOF'
+import torch
+try:
+    from flash_attn import flash_attn_func
+    print("✅ FlashAttention is available")
+except Exception as e:
+    print("❌ FlashAttention NOT available:", e)
+    print("⚠️ Will rely on SDPA")
+EOF
+
+
 
 # Applying transformer patch as per YuEGP documentation
 if [[ "$YUEGP_TRANSFORMER_PATCH" == "1" ]]; then
@@ -90,6 +109,19 @@ if [[ "$YUEGP_ENABLE_ICL" == "1" ]]; then
     echo "🔨 Enabling audio prompt..."
     YUEGP_ARGS="$YUEGP_ARGS --icl"
 fi
+
+
+USE_SDPA=0
+python - <<'EOF' || USE_SDPA=1
+from flash_attn import flash_attn_func
+EOF
+
+if [[ "$USE_SDPA" == "1" ]]; then
+    echo "⚠️ FlashAttention unavailable, enabling SDPA fallback"
+    YUEGP_ARGS="$YUEGP_ARGS --sdpa"
+fi
+
+
 
 # Ensuring that all output is flushed to the console, and that stderr is redirected to stdout and log
 echo "🚀 Starting YuEGP service..."

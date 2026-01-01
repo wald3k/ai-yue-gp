@@ -85,3 +85,14 @@ docker run --gpus all -it \
   alissonpereiraanjos/yue-interface:latest
 ```
 This hasn't worked on my hardware though. It is just for reference.
+
+## Simplified workflow
+This has been tested on RTX3060 12GB and works.
+```
+# Build the image
+docker build -t olilanz/ai-yue-gp .
+
+# Run script
+chmod +x run_docker.sh
+run_docker.sh
+```
