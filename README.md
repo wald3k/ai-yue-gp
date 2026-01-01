@@ -88,6 +88,8 @@ This hasn't worked on my hardware though. It is just for reference.
 
 ## Simplified workflow
 This has been tested on RTX3060 12GB and works.
+More details about GPU on host machine:
+NVIDIA-SMI 580.95.05------Driver Version: 580.95.05------CUDA Version: 13.0
 ```
 # Build the image
 docker build -t olilanz/ai-yue-gp .
